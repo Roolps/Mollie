@@ -48,10 +48,10 @@ type Link struct {
 }
 
 type Error struct {
-	Status *int    `json:"status"`
-	Title  *string `json:"title"`
-	Detail *string `json:"detail"`
-	Links  *[]Link `json:"_links"`
+	Status *int             `json:"status"`
+	Title  *string          `json:"title"`
+	Detail *string          `json:"detail"`
+	Links  *map[string]Link `json:"_links"`
 }
 
 // extract error data from mollie response
@@ -71,4 +71,20 @@ func unpoint[T any](t *T) T {
 		return result
 	}
 	return *t
+}
+
+type ListResponse struct {
+	Count    int                        `json:"count"`
+	Embedded map[string]json.RawMessage `json:"_embedded"`
+}
+
+// Finish later
+func toQueryString(param any) {
+	raw, _ := json.Marshal(param)
+	paramsMAP := map[string]string{}
+	json.Unmarshal(raw, &paramsMAP)
+	query := ""
+	for key, val := range paramsMAP {
+		query = query + fmt.Sprintf("&%v=%v", key, val)
+	}
 }

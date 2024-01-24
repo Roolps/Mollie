@@ -46,7 +46,7 @@ func TestExtractErrorFromInvalidErrorData(t *testing.T) {
 
 func TestCreatePaymentRequestWithInvalidSecret(t *testing.T) {
 	mollieTest.Secret = "abcdefghijklmnopqrstuvwxyz"
-	_, err := mollieTest.CreatePayment(&CreatePayment{})
+	_, err := mollieTest.CreatePayment(&CreatePaymentParameters{})
 	if err == nil {
 		t.Error("create payment didn't return an error when secret key invalid")
 	}
@@ -57,7 +57,7 @@ func TestCreatePaymentRequestWithInvalidSecret(t *testing.T) {
 func TestCreatePaymentRequestMissingRequiredFields(t *testing.T) {
 	envFile, _ := godotenv.Read(".env")
 	mollieTest.Secret = envFile["MOLLIE_SECRET"]
-	_, err := mollieTest.CreatePayment(&CreatePayment{})
+	_, err := mollieTest.CreatePayment(&CreatePaymentParameters{})
 	if err == nil {
 		t.Error("create payment didn't return an error despite missing required fields")
 	}
@@ -68,7 +68,7 @@ func TestCreatePaymentRequestMissingRequiredFields(t *testing.T) {
 func TestCreatePaymentRequestWithAllRequiredData(t *testing.T) {
 	envFile, _ := godotenv.Read(".env")
 	mollieTest.Secret = envFile["MOLLIE_SECRET"]
-	_, err := mollieTest.CreatePayment(&CreatePayment{
+	_, err := mollieTest.CreatePayment(&CreatePaymentParameters{
 		Amount: PaymentAmount{
 			Currency: UnitedStatesDollar,
 			Value:    "10.00",

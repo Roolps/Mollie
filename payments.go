@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type CreatePayment struct {
+type CreatePaymentParameters struct {
 	// Required create payment fields (amount, description, redirectURL)
 	Amount      PaymentAmount `json:"amount"`
 	Description string        `json:"description"`
@@ -45,7 +45,7 @@ type Payment struct {
 	SequenceType string          `json:"sequenceType"`
 	RedirectURL  string          `json:"redirectUrl"`
 	WebhookURL   string          `json:"webhookUrl"`
-	Links        []Link          `json:"_links"`
+	Links        map[string]Link `json:"_links"`
 }
 
 type Currency string
@@ -111,7 +111,7 @@ const (
 	Lithuanian           Locale = "lt_LT"
 )
 
-func (c *APIClient) CreatePayment(param *CreatePayment) (*Payment, error) {
+func (c *APIClient) CreatePayment(param *CreatePaymentParameters) (*Payment, error) {
 	raw, _ := json.Marshal(param)
 	raw, err := c.request("payments", "POST", raw)
 	if err != nil {
