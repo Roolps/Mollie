@@ -2,6 +2,7 @@ package mollie
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -118,6 +119,8 @@ func (c *APIClient) CreatePayment(param *CreatePaymentParameters) (*Payment, err
 		return nil, err
 	}
 	p := &Payment{}
-	json.Unmarshal(raw, p)
+	if err = json.Unmarshal(raw, p); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal json body: %v", err)
+	}
 	return p, nil
 }

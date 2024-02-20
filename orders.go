@@ -2,6 +2,7 @@ package mollie
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -14,6 +15,7 @@ type CreateOrderParameters struct {
 	BillingAddress  *Address          `json:"billingAddress"`
 	ShippingAddress *Address          `json:"shippingAddress,omitempty"`
 	RedirectURL     string            `json:"redirectUrl"`
+	WebhookURL      string            `json:"webhookUrl,omitempty"`
 	CancelURL       string            `json:"cancelUrl,omitempty"`
 	Locale          Locale            `json:"locale"`
 	Method          string            `json:"method,omitempty"`
@@ -32,6 +34,7 @@ type OrderLine struct {
 }
 
 type ProductType string
+type PaymentStatus string
 
 const (
 	ProductTypePhysical    ProductType = "physical"
@@ -41,6 +44,14 @@ const (
 	ProductTypeStoreCredit ProductType = "store_credit"
 	ProductTypeGiftCard    ProductType = "gift_card"
 	ProductTypeSurcharge   ProductType = "surcharge"
+
+	PaymentStatusCreated    PaymentStatus = "created"
+	PaymentStatusPaid       PaymentStatus = "paid"
+	PaymentStatusAuthorized PaymentStatus = "authorized"
+	PaymentStatusCanceled   PaymentStatus = "canceled"
+	PaymentStatusShipping   PaymentStatus = "shipping"
+	PaymentStatusCompleted  PaymentStatus = "completed"
+	PaymentStatusExpired    PaymentStatus = "expired"
 )
 
 type Address struct {
@@ -64,7 +75,7 @@ type Order struct {
 	ProfileId       string          `json:"profileId"`
 	Method          string          `json:"method"`
 	Amount          PaymentAmount   `json:"amount"`
-	Status          string          `json:"status"`
+	Status          PaymentStatus   `json:"status"`
 	IsCancelable    bool            `json:"isCancelable"`
 	Metadata        map[string]any  `json:"metadata"`
 	CreatedAt       time.Time       `json:"createdAt"`
@@ -88,6 +99,20 @@ func (c *APIClient) CreateOrder(param *CreateOrderParameters) (*Order, error) {
 		return nil, err
 	}
 	o := &Order{}
-	json.Unmarshal(raw, o)
+	if err = json.Unmarshal(raw, o); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal json body: %v", err)
+	}
+	return o, nil
+}
+
+func (c *APIClient) GetOrder(id string) (*Order, error) {
+	raw, err := c.request(fmt.Sprintf("orders/%v", id), "GET", nil)
+	if err != nil {
+		return nil, err
+	}
+	o := &Order{}
+	if err = json.Unmarshal(raw, o); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal json body: %v", err)
+	}
 	return o, nil
 }

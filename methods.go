@@ -2,6 +2,7 @@ package mollie
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // Finish later
@@ -41,8 +42,12 @@ func (c *APIClient) ListPaymentMethods(param *ListPaymentMethodsParameters) ([]*
 		return nil, err
 	}
 	result := ListResponse{}
-	json.Unmarshal(raw, &result)
+	if err = json.Unmarshal(raw, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal json body: %v", err)
+	}
 	methods := []*PaymentMethod{}
-	json.Unmarshal(result.Embedded["methods"], &methods)
+	if err = json.Unmarshal(result.Embedded["methods"], &methods); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal json body: %v", err)
+	}
 	return methods, nil
 }

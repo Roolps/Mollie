@@ -25,23 +25,31 @@ func TestExtractErrorFromValidErrorData(t *testing.T) {
 		}
 	}
 	`)
-	err := extractError(raw)
+	err := extractError(401, raw)
 	if err == nil {
 		t.Error("should return error as error data is valid")
 	}
 }
 
-func TestExtractErrorFromInvalidErrorData(t *testing.T) {
+func TestExtractErrorFromUnknownErrorCode(t *testing.T) {
 	raw := []byte(`
 	{
-		"resource": "payment",
-		"id": "tr_PSj7b45bkj",
-		"mode": "test"
-	}`)
-	err := extractError(raw)
-	if err != nil {
-		t.Error("should return no error as there is error data is invalid")
+		"status":620,
+		"title":"Error title here",
+		"detail":"Lorem ipsum dolor sit amet",
+		"_links":{
+			"documentation":{
+				"href":"https://docs.mollie.com/overview/authentication",
+				"type":"text/html"
+			}
+		}
 	}
+	`)
+	err := extractError(620, raw)
+	if err == nil {
+		t.Error("should return error as error data is valid")
+	}
+	log.Println(err)
 }
 
 func TestCreatePaymentRequestWithInvalidSecret(t *testing.T) {

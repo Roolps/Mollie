@@ -35,11 +35,12 @@ func (c *APIClient) request(endpoint string, method string, data []byte) ([]byte
 		return nil, err
 	}
 
-	err = extractError(raw)
-	if err != nil {
-		return nil, err
+	// API request succeeded
+	if res.StatusCode >= 200 && res.StatusCode < 300 {
+		return raw, nil
 	}
-	return raw, nil
+	err = extractError(res.StatusCode, raw)
+	return nil, err
 }
 
 type Link struct {
@@ -48,20 +49,30 @@ type Link struct {
 }
 
 type Error struct {
-	Status *int             `json:"status"`
-	Title  *string          `json:"title"`
-	Detail *string          `json:"detail"`
-	Links  *map[string]Link `json:"_links"`
+	Status int             `json:"status"`
+	Title  string          `json:"title"`
+	Detail string          `json:"detail"`
+	Links  map[string]Link `json:"_links"`
 }
 
 // extract error data from mollie response
-func extractError(raw []byte) error {
-	err := Error{}
-	json.Unmarshal(raw, &err)
-	if err.Status != nil && err.Title != nil && err.Detail != nil && err.Links != nil {
-		return fmt.Errorf("[error code %v] %v: %v", unpoint(err.Status), unpoint(err.Title), unpoint(err.Detail))
+func extractError(status int, raw []byte) error {
+	if status >= 400 && status < 500 {
+		e := Error{}
+		if err := json.Unmarshal(raw, &e); err != nil {
+			return fmt.Errorf("failed to unmarshal json: %v", err)
+		}
+		return fmt.Errorf("[error code %v] %v: %v", e.Status, e.Title, e.Detail)
 	}
-	return nil
+	if status >= 500 && status < 600 {
+		e := Error{}
+		if err := json.Unmarshal(raw, &e); err != nil {
+			return fmt.Errorf("failed to unmarshal json: %v", err)
+		}
+		return fmt.Errorf("[error code %v] %v: %v (THIS IS A MOLLIE SERVER ERROR)", e.Status, e.Title, e.Detail)
+	}
+	// just return the full JSON body and the status int
+	return fmt.Errorf("unknown error status %v, return body: %v", status, string(raw))
 }
 
 // safely get data at pointer
